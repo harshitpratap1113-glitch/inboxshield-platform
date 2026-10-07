@@ -36,22 +36,22 @@
 
   <style>
     body {
-      background-color: #07090E;
+      background-color: #06080D;
       color: #F3F4F6;
       font-family: 'Inter', sans-serif;
     }
     .glass-nav {
-      background: rgba(11, 15, 25, 0.92);
-      backdrop-filter: blur(20px);
+      background: rgba(8, 11, 20, 0.95);
+      backdrop-filter: blur(24px);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .glass-card {
-      background: rgba(15, 19, 29, 0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(13, 17, 27, 0.88);
+      backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .glass-card:hover {
-      border-color: rgba(16, 185, 129, 0.4);
+      border-color: rgba(16, 185, 129, 0.35);
     }
     .toast-animate {
       animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -60,15 +60,21 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+    .glow-emerald {
+      box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.25);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.25);
+    }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #07090E; }
+    ::-webkit-scrollbar-track { background: #06080D; }
     ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #10B981; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
-  <!-- Toast Container -->
+  <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-md"></div>
 
   <!-- ================= TOP NAVIGATION BAR ================= -->
@@ -76,8 +82,8 @@
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
       
       <!-- Brand Logo -->
-      <a href="#" onclick="switchPage('studio'); return false;" class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-500/25">
+      <a href="#" onclick="switchPage('studio'); return false;" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-500/25 group-hover:scale-105 transition">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
         <div>
@@ -96,7 +102,7 @@
           <span>1. Deliverability Studio</span>
         </button>
         <button id="tab-radar" onclick="switchPage('radar')" class="px-4 py-2 rounded-lg text-gray-400 hover:text-white transition flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
           <i class="fa-solid fa-satellite-dish text-xs"></i>
           <span>2. Live Outbound Radar</span>
         </button>
@@ -106,7 +112,7 @@
       <div class="hidden md:flex items-center gap-3">
         <button onclick="openSmtpModal()" class="px-3.5 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-700 text-xs font-semibold flex items-center gap-2 transition">
           <i class="fa-brands fa-google text-emerald-400"></i>
-          <span>Google SMTP Settings</span>
+          <span id="nav-smtp-status">Google SMTP: Set Key</span>
         </button>
         <a href="https://bizflow-platform.vercel.app" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
           <span>BizFlow AI</span>
@@ -117,28 +123,54 @@
     </div>
   </header>
 
+  <!-- ================= 3-STEP WORKFLOW PROGRESS BAR ================= -->
+  <div class="bg-gray-950/70 border-b border-gray-800/60 px-4 sm:px-6 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2 font-bold text-gray-300">
+        <i class="fa-solid fa-route text-emerald-400"></i>
+        <span>3-Step Primary Inbox Guarantee Flow:</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 sm:gap-6 text-xs font-medium">
+        <div class="flex items-center gap-2 text-emerald-400 font-bold">
+          <span class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-500 text-center leading-4 text-[11px] font-mono">1</span>
+          <span>Spam Keyword Audit & AI Rewrite</span>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-700 text-[10px] hidden sm:inline"></i>
+        <div class="flex items-center gap-2 text-cyan-400 font-bold">
+          <span class="w-5 h-5 rounded-full bg-cyan-950 border border-cyan-500 text-center leading-4 text-[11px] font-mono">2</span>
+          <span>MX & Spam Trap Lead Scrub</span>
+        </div>
+        <i class="fa-solid fa-chevron-right text-gray-700 text-[10px] hidden sm:inline"></i>
+        <div class="flex items-center gap-2 text-purple-400 font-bold">
+          <span class="w-5 h-5 rounded-full bg-purple-950 border border-purple-500 text-center leading-4 text-[11px] font-mono">3</span>
+          <span>Google TLS 587 Authenticated Dispatch</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= MAIN CONTENT CONTAINER ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
 
     <!-- ========================================================================= -->
     <!-- PAGE 1: DELIVERABILITY STUDIO (Cold Email Editor + Spam & DNS Auditor)    -->
     <!-- ========================================================================= -->
-    <div id="page-studio" class="space-y-8">
+    <div id="page-studio" class="space-y-7">
       
-      <!-- Hero Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-800/80">
+      <!-- Header Banner with Template Quick-Select -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
             <span>Cold Email Deliverability Studio</span>
-            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">Zero-Spam Algorithm</span>
+            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">Heuristic Engine</span>
           </h1>
-          <p class="text-sm text-gray-400 mt-1">Audit your cold email pitch against Google Workspace & Outlook heuristics. Ensure 100% Primary Inbox landing before sending.</p>
+          <p class="text-sm text-gray-400 mt-1">Audit your pitch against 2026 Google Workspace & Microsoft 365 spam filters before sending a single email.</p>
         </div>
 
         <!-- Template Selector -->
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-semibold text-gray-400 whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles text-emerald-400 mr-1"></i> Quick Template:</label>
-          <select id="template-select" onchange="loadTemplate(this.value)" class="bg-gray-900 border border-gray-700 text-gray-200 text-xs rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+        <div class="flex items-center gap-2 bg-gray-950 border border-gray-800 p-1.5 rounded-2xl">
+          <label class="text-xs font-semibold text-gray-400 pl-2 whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles text-emerald-400 mr-1"></i> Template:</label>
+          <select id="template-select" onchange="loadTemplate(this.value)" class="bg-gray-900 border border-gray-700 text-gray-200 text-xs rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none cursor-pointer">
             <option value="startup-pitch">🚀 Startup Founder Outreach (98% Score)</option>
             <option value="agency-b2b">💼 Dev & Creative Agency Inbound (96% Score)</option>
             <option value="local-biz-site">🌐 High-Retention Local SMB Pitch (97% Score)</option>
@@ -147,49 +179,53 @@
         </div>
       </div>
 
-      <!-- Studio Grid: Left Editor + Right Deliverability Radar -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Studio Grid: Left Compose + Right Heuristics & Live Simulator -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
         
         <!-- LEFT 7 COLS: Interactive Email Editor -->
         <div class="lg:col-span-7 space-y-6">
-          <div class="glass-card rounded-2xl p-6 space-y-5 shadow-xl">
+          
+          <!-- Compose Card -->
+          <div class="glass-card rounded-2xl p-6 space-y-5 shadow-xl glow-emerald">
             
-            <div class="flex items-center justify-between">
-              <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
-                <i class="fa-solid fa-envelope-open-text text-emerald-400"></i>
-                <span>Email Draft Compose</span>
-              </h2>
-              <span id="char-count" class="text-xs font-mono text-gray-500">0 chars | 0 links</span>
+            <div class="flex items-center justify-between border-b border-gray-800/80 pb-3">
+              <div class="flex items-center gap-2 text-sm font-bold text-white">
+                <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs">
+                  <i class="fa-solid fa-pen"></i>
+                </div>
+                <span>Draft Email Copy</span>
+              </div>
+              <span id="char-count" class="text-xs font-mono text-gray-400 bg-gray-950 px-2.5 py-1 rounded-lg border border-gray-800">0 chars | 0 links</span>
             </div>
 
             <!-- Subject Line -->
             <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
-                <span>Subject Line</span>
-                <span id="subject-warning" class="text-[11px] text-amber-400 font-mono hidden"><i class="fa-solid fa-triangle-exclamation"></i> High spam risk phrasing</span>
-              </label>
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-gray-300">Subject Line</label>
+                <span id="subject-warning" class="text-[11px] text-amber-400 font-mono hidden"><i class="fa-solid fa-triangle-exclamation"></i> High spam risk keywords detected</span>
+              </div>
               <input type="text" id="email-subject" oninput="triggerLiveAudit()" placeholder="e.g., Quick question regarding your growth at {company}" 
-                class="w-full bg-gray-950/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500 font-medium transition" />
+                class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500 font-medium transition shadow-inner" />
             </div>
 
             <!-- Email Body -->
             <div class="space-y-1.5">
-              <label class="text-xs font-bold text-gray-300 flex items-center justify-between">
-                <span>Email Body (Plaintext Peer-to-Peer Copy)</span>
-                <span class="text-[11px] text-gray-500">Variables: <code class="text-emerald-400">{name}</code>, <code class="text-emerald-400">{company}</code>, <code class="text-emerald-400">{niche}</code></span>
-              </label>
-              <textarea id="email-body" rows="11" oninput="triggerLiveAudit()" placeholder="Write your pitch here..." 
-                class="w-full bg-gray-950/80 border border-gray-800 rounded-xl p-4 text-sm text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500 font-mono text-xs leading-relaxed transition"></textarea>
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-gray-300">Email Body (Plaintext Peer-to-Peer Copy)</label>
+                <span class="text-[11px] text-gray-500">Variables: <code class="text-emerald-400 font-mono">{name}</code>, <code class="text-emerald-400 font-mono">{company}</code>, <code class="text-emerald-400 font-mono">{niche}</code></span>
+              </div>
+              <textarea id="email-body" rows="10" oninput="triggerLiveAudit()" placeholder="Write your cold pitch here..." 
+                class="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-xs font-mono text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500 leading-relaxed transition shadow-inner"></textarea>
             </div>
 
             <!-- Action Toolbar -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-800/80">
               <div class="flex items-center gap-2">
                 <button onclick="auditSpamScore()" class="px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-700 text-xs font-bold flex items-center gap-2 transition">
                   <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i>
                   <span>Re-Audit Score</span>
                 </button>
-                <button onclick="rewritePrimaryInbox()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+                <button onclick="rewritePrimaryInbox()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition">
                   <i class="fa-solid fa-wand-magic-sparkles"></i>
                   <span>1-Click AI Primary Rewrite</span>
                 </button>
@@ -212,14 +248,14 @@
                 </div>
                 <div>
                   <h3 class="text-sm font-bold text-white">Domain DNS Deliverability Inspector</h3>
-                  <p class="text-xs text-gray-400">Verify SPF, DMARC, and MX records on your sending domain</p>
+                  <p class="text-xs text-gray-400">Live DoH audit of SPF, DMARC, and MX records for your sender domain</p>
                 </div>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
               <input type="text" id="dns-domain-input" placeholder="e.g. yourstartup.com" 
-                class="flex-1 bg-gray-950/80 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-medium" />
+                class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-gray-100 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-medium" />
               <button onclick="auditDomainDns()" class="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-2 transition">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <span>Inspect DNS</span>
@@ -257,11 +293,11 @@
 
         </div>
 
-        <!-- RIGHT 5 COLS: Deliverability Score & Spam Keyword Radar -->
+        <!-- RIGHT 5 COLS: Deliverability Score & Live Gmail Simulator & Google App Pass Setup -->
         <div class="lg:col-span-5 space-y-6">
           
           <!-- Score Card -->
-          <div class="glass-card rounded-2xl p-6 space-y-6 shadow-xl relative overflow-hidden">
+          <div class="glass-card rounded-2xl p-6 space-y-5 shadow-xl relative overflow-hidden">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold uppercase tracking-wider text-gray-400">DELIVERABILITY SCORE</span>
               <span id="score-badge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-950 text-emerald-400 border border-emerald-700/60">PRIMARY GUARANTEED</span>
@@ -282,13 +318,13 @@
             </div>
 
             <!-- Flagged Triggers List -->
-            <div class="space-y-3 pt-2">
+            <div class="space-y-2.5 pt-1">
               <div class="flex items-center justify-between text-xs font-bold text-gray-300">
                 <span>Spam Filter Heuristics:</span>
                 <span id="flags-count-badge" class="text-gray-500 font-mono">0 Triggers Detected</span>
               </div>
 
-              <div id="flags-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div id="flags-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
                 <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-xs text-emerald-300 flex items-center gap-2.5">
                   <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
                   <span>Zero aggressive sales buzzwords detected! Safe for Google Primary Inbox.</span>
@@ -296,6 +332,39 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- LIVE GMAIL INBOX SIMULATOR (Visual Clarity Feature) -->
+          <div class="glass-card rounded-2xl p-5 space-y-3 shadow-xl border-gray-800">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-xs font-bold text-gray-300 uppercase tracking-wider">
+                <i class="fa-solid fa-inbox text-emerald-400"></i>
+                <span>Live Recipient Inbox Simulator</span>
+              </div>
+              <span id="sim-tab-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/60">
+                📁 PRIMARY TAB
+              </span>
+            </div>
+
+            <!-- Gmail Mock Row -->
+            <div class="p-3.5 rounded-xl bg-[#141824] border border-gray-800 space-y-1.5 text-xs shadow-inner">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center">
+                    <span id="sim-avatar-letter">Y</span>
+                  </div>
+                  <span id="sim-sender-name" class="font-bold text-white text-xs">You (Founder)</span>
+                </div>
+                <span class="text-[10px] text-gray-400 font-mono">Just now</span>
+              </div>
+
+              <div class="truncate text-xs">
+                <span id="sim-subject-preview" class="font-bold text-gray-200">Quick question regarding your growth at {company}</span>
+                <span class="text-gray-500 mx-1">—</span>
+                <span id="sim-body-preview" class="text-gray-400">Hey {name}, noticed what you're building...</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-400 text-center">Simulated Google Gmail view on recipient device</p>
           </div>
 
           <!-- Google App Password 30-Second Setup Guide -->
@@ -347,43 +416,45 @@
     <!-- ========================================================================= -->
     <!-- PAGE 2: LIVE DISPATCH RADAR (Audience Sanitizer & Campaign Sender)        -->
     <!-- ========================================================================= -->
-    <div id="page-radar" class="space-y-8 hidden">
+    <div id="page-radar" class="space-y-7 hidden">
       
       <!-- Hero Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-800/80">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-1">
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
             <span>Live Outbound Dispatch Radar</span>
             <span class="px-2.5 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-mono font-bold">Zero-Bounce Shield</span>
           </h1>
-          <p class="text-sm text-gray-400 mt-1">Paste your verified lead audience. Dead mailboxes and spam traps are quarantined automatically.</p>
+          <p class="text-sm text-gray-400 mt-1">Paste your lead audience. Dead mailboxes and spam traps are quarantined automatically before sending.</p>
         </div>
 
         <button onclick="switchPage('studio')" class="px-4 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-700 text-xs font-bold flex items-center gap-2 transition self-start md:self-auto">
           <i class="fa-solid fa-arrow-left text-xs"></i>
-          <span>Back to Studio</span>
+          <span>Back to Deliverability Studio</span>
         </button>
       </div>
 
       <!-- Radar Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
         
         <!-- LEFT 6 COLS: Audience Sanitizer Input -->
         <div class="lg:col-span-6 space-y-6">
-          <div class="glass-card rounded-2xl p-6 space-y-5 shadow-xl">
+          <div class="glass-card rounded-2xl p-6 space-y-5 shadow-xl glow-cyan">
             
-            <div class="flex items-center justify-between">
-              <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
-                <i class="fa-solid fa-users-viewfinder text-cyan-400"></i>
+            <div class="flex items-center justify-between border-b border-gray-800/80 pb-3">
+              <div class="flex items-center gap-2 text-sm font-bold text-white">
+                <div class="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xs">
+                  <i class="fa-solid fa-users"></i>
+                </div>
                 <span>Lead Audience Input (Raw Text / CSV)</span>
-              </h2>
+              </div>
               <button onclick="loadSampleAudience()" class="text-xs text-cyan-400 hover:underline font-bold">Load Sample ICP Leads</button>
             </div>
 
             <textarea id="audience-raw" rows="9" placeholder="Paste email list or CSV here (e.g. alex@agency.io, sarah@startup.com)..." 
-              class="w-full bg-gray-950/80 border border-gray-800 rounded-xl p-4 text-xs font-mono text-gray-100 placeholder-gray-600 focus:outline-none focus:border-cyan-500 leading-relaxed"></textarea>
+              class="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-xs font-mono text-gray-100 placeholder-gray-600 focus:outline-none focus:border-cyan-500 leading-relaxed shadow-inner"></textarea>
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-800/80">
               <button onclick="sanitizeAudience()" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
                 <i class="fa-solid fa-shield-halved"></i>
                 <span>Sanitize & Verify MX Records</span>
@@ -435,7 +506,7 @@
                 <i class="fa-solid fa-rocket"></i>
                 <span>Outbound Campaign Dispatcher</span>
               </h2>
-              <span id="sender-preview" class="text-xs text-gray-400 font-mono">Sender: Not Configured (Click Google SMTP Settings)</span>
+              <span id="sender-preview" class="text-xs text-gray-400 font-mono">Sender: Not Configured (Click Google SMTP)</span>
             </div>
 
             <div class="p-4 rounded-xl bg-gray-950 border border-gray-800 space-y-2 text-xs text-gray-300">
@@ -672,13 +743,31 @@
       document.getElementById('email-body').value = t.body;
       document.getElementById('disp-template-name').innerText = t.title;
       document.getElementById('disp-subject').innerText = t.subject;
+      
+      updateGmailSimulator(t.subject, t.body);
       auditSpamScore();
     }
 
     // Debounced Live Audit
     function triggerLiveAudit() {
+      const subj = document.getElementById('email-subject').value;
+      const body = document.getElementById('email-body').value;
+      updateGmailSimulator(subj, body);
+
       clearTimeout(auditTimer);
       auditTimer = setTimeout(auditSpamScore, 350);
+    }
+
+    function updateGmailSimulator(subject, body) {
+      const subjEl = document.getElementById('sim-subject-preview');
+      const bodyEl = document.getElementById('sim-body-preview');
+      const senderName = document.getElementById('cfg-sender-name').value.trim() || 'You (Founder)';
+      
+      document.getElementById('sim-sender-name').innerText = senderName;
+      document.getElementById('sim-avatar-letter').innerText = (senderName.charAt(0) || 'Y').toUpperCase();
+      
+      subjEl.innerText = subject || '(No Subject)';
+      bodyEl.innerText = (body || '').replace(/[\n\r]+/g, ' ').substring(0, 75) + '...';
     }
 
     // Audit Deliverability & Spam Score API Call
@@ -715,6 +804,7 @@
       const flagsCount = document.getElementById('flags-count-badge');
       const flagsList = document.getElementById('flags-list');
       const subjWarning = document.getElementById('subject-warning');
+      const simTabBadge = document.getElementById('sim-tab-badge');
 
       scoreNum.innerText = data.score;
       scoreBar.style.width = `${data.score}%`;
@@ -728,18 +818,30 @@
         scoreBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-950 text-emerald-400 border border-emerald-700/60";
         scoreBadge.innerText = "PRIMARY GUARANTEED";
         subjWarning.classList.add('hidden');
+        if (simTabBadge) {
+          simTabBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/60";
+          simTabBadge.innerText = "📁 PRIMARY TAB ✓";
+        }
       } else if (data.score >= 65) {
         scoreNum.className = "text-6xl font-black text-cyan-400 tracking-tight font-mono";
         scoreBar.className = "h-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-all duration-500";
         scoreBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-cyan-950 text-cyan-400 border border-cyan-700/60";
         scoreBadge.innerText = "MODERATE DELIVERABILITY";
         subjWarning.classList.add('hidden');
+        if (simTabBadge) {
+          simTabBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-950 text-amber-300 border border-amber-700/60";
+          simTabBadge.innerText = "⚠️ PROMOTIONS TAB";
+        }
       } else {
         scoreNum.className = "text-6xl font-black text-rose-400 tracking-tight font-mono";
         scoreBar.className = "h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-500";
         scoreBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-rose-950 text-rose-400 border border-rose-700/60";
         scoreBadge.innerText = "SPAM RISK WARNING";
         subjWarning.classList.remove('hidden');
+        if (simTabBadge) {
+          simTabBadge.className = "px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-950 text-rose-300 border border-rose-700/60";
+          simTabBadge.innerText = "🚨 SPAM FOLDER QUARANTINE";
+        }
       }
 
       // Render Flags
@@ -758,37 +860,23 @@
                 <i class="fa-solid fa-triangle-exclamation text-xs"></i>
                 <span>"${f.phrase}"</span>
               </span>
-              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800/50">${f.severity}</span>
+              <span class="text-[10px] font-mono text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800">-${f.weight} pts (${f.category})</span>
             </div>
-            <div class="text-[11px] text-gray-400">${f.reason}</div>
-            <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-0.5">
-              <span class="text-gray-500 font-bold">Replace with:</span>
-              <button onclick="replacePhrase('${f.phrase}', '${f.suggestion}')" class="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-700/50 hover:bg-emerald-800/60 text-emerald-300 font-mono font-bold transition">
-                "${f.suggestion}"
-              </button>
+            <p class="text-gray-400 text-[11px] leading-relaxed">${f.reason}</p>
+            <div class="text-[11px] text-emerald-400 bg-emerald-950/40 px-2 py-1 rounded border border-emerald-900/60">
+              <span class="font-bold">Recommendation:</span> Replace with natural conversational phrasing.
             </div>
           </div>
         `).join('');
       }
     }
 
-    // 1-Click Replace Single Trigger
-    function replacePhrase(oldPhrase, newPhrase) {
-      const subjEl = document.getElementById('email-subject');
-      const bodyEl = document.getElementById('email-body');
-
-      const regex = new RegExp(oldPhrase, 'gi');
-      subjEl.value = subjEl.value.replace(regex, newPhrase);
-      bodyEl.value = bodyEl.value.replace(regex, newPhrase);
-
-      showToast("Phrase Replaced", `Updated "${oldPhrase}" -> "${newPhrase}"`, "success");
-      auditSpamScore();
-    }
-
-    // 1-Click AI Primary Inbox Clean Rewrite
+    // 1-Click AI Primary Inbox Rewriter
     async function rewritePrimaryInbox() {
       const subject = document.getElementById('email-subject').value;
       const body = document.getElementById('email-body').value;
+
+      showToast("AI Rewriter Active", "Neutralizing buzzwords and structuring peer-to-peer tone...", "info");
 
       try {
         const res = await fetch('/api/audit/rewrite-primary', {
@@ -799,30 +887,28 @@
 
         if (res.ok) {
           const json = await res.json();
-          document.getElementById('email-subject').value = json.data.rewritten_subject;
-          document.getElementById('email-body').value = json.data.rewritten_body;
-          showToast("AI Primary Rewrite Applied!", `New Deliverability Score: ${json.data.new_score}%`, "success");
+          document.getElementById('email-subject').value = json.data.cleaned_subject;
+          document.getElementById('email-body').value = json.data.cleaned_body;
+          document.getElementById('disp-subject').innerText = json.data.cleaned_subject;
+          
+          updateGmailSimulator(json.data.cleaned_subject, json.data.cleaned_body);
           auditSpamScore();
+          showToast("Rewritten to Primary Inbox ✓", `Cleaned ${json.data.replacements_made} spam triggers!`, "success");
         }
       } catch (err) {
-        showToast("Error", "Could not rewrite email", "error");
+        showToast("Rewrite Error", err.message, "error");
       }
     }
 
-    // Domain DNS Health Audit
+    // Domain DNS Inspector
     async function auditDomainDns() {
       const domain = document.getElementById('dns-domain-input').value.trim();
       if (!domain) {
-        showToast("Enter Domain", "Please provide a domain name (e.g. yourstartup.com)", "warning");
+        showToast("Enter Domain", "Please provide a domain to inspect (e.g. yourstartup.com)", "warning");
         return;
       }
 
-      const resultsDiv = document.getElementById('dns-results');
-      resultsDiv.classList.remove('hidden');
-
-      document.getElementById('dns-mx-val').innerText = "Querying DNS...";
-      document.getElementById('dns-spf-val').innerText = "Querying DNS...";
-      document.getElementById('dns-dmarc-val').innerText = "Querying DNS...";
+      showToast("Querying Live DNS Records...", "Performing Google DoH lookup on MX, SPF, DMARC", "info");
 
       try {
         const res = await fetch('/api/audit/dns-health', {
@@ -835,18 +921,50 @@
           const json = await res.json();
           const d = json.data;
 
-          document.getElementById('dns-mx-val').innerText = d.mx_status.badge;
-          document.getElementById('dns-mx-val').className = d.mx_status.valid ? "font-mono text-emerald-400 font-bold" : "font-mono text-rose-400 font-bold";
+          document.getElementById('dns-results').classList.remove('hidden');
 
-          document.getElementById('dns-spf-val').innerText = d.spf_status.badge;
-          document.getElementById('dns-spf-val').className = d.spf_status.valid ? "font-mono text-emerald-400 font-bold" : "font-mono text-rose-400 font-bold";
+          // MX
+          const mxVal = document.getElementById('dns-mx-val');
+          const mxCard = document.getElementById('dns-mx-card');
+          if (d.mx_configured) {
+            mxVal.innerText = `Active (${d.mail_provider})`;
+            mxVal.className = "font-mono text-emerald-400 font-bold";
+            mxCard.className = "p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-1";
+          } else {
+            mxVal.innerText = "Missing MX";
+            mxVal.className = "font-mono text-rose-400 font-bold";
+            mxCard.className = "p-3 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-1";
+          }
 
-          document.getElementById('dns-dmarc-val').innerText = d.dmarc_status.badge;
-          document.getElementById('dns-dmarc-val').className = d.dmarc_status.valid ? "font-mono text-emerald-400 font-bold" : "font-mono text-rose-400 font-bold";
+          // SPF
+          const spfVal = document.getElementById('dns-spf-val');
+          const spfCard = document.getElementById('dns-spf-card');
+          if (d.spf_configured) {
+            spfVal.innerText = "Configured ✓";
+            spfVal.className = "font-mono text-emerald-400 font-bold";
+            spfCard.className = "p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-1";
+          } else {
+            spfVal.innerText = "Missing SPF (High Risk)";
+            spfVal.className = "font-mono text-rose-400 font-bold";
+            spfCard.className = "p-3 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-1";
+          }
 
+          // DMARC
+          const dmarcVal = document.getElementById('dns-dmarc-val');
+          const dmarcCard = document.getElementById('dns-dmarc-card');
+          if (d.dmarc_configured) {
+            dmarcVal.innerText = `Active (p=${d.dmarc_policy})`;
+            dmarcVal.className = "font-mono text-emerald-400 font-bold";
+            dmarcCard.className = "p-3 rounded-xl bg-emerald-950/20 border border-emerald-800/40 space-y-1";
+          } else {
+            dmarcVal.innerText = "Missing DMARC";
+            dmarcVal.className = "font-mono text-rose-400 font-bold";
+            dmarcCard.className = "p-3 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-1";
+          }
+
+          // Recommendations
           const recDiv = document.getElementById('dns-recommendations');
           const recList = document.getElementById('dns-rec-list');
-
           if (d.recommendations && d.recommendations.length > 0) {
             recDiv.classList.remove('hidden');
             recList.innerHTML = d.recommendations.map(r => `
@@ -950,51 +1068,57 @@
           })
         });
 
-        const json = await res.json();
         if (res.ok) {
-          document.getElementById('delivery-rate-badge').innerText = `Deliverability: ${json.deliverability_rate}`;
-          logs.innerHTML = json.logs.map(l => `
-            <div class="flex items-center justify-between text-xs">
-              <span class="${l.status === 'delivered' ? 'text-emerald-400' : 'text-rose-400'}">
-                ${l.status === 'delivered' ? '✓ [PRIMARY]' : '✗ [FAILED]'} ${l.recipient}
-              </span>
-              <span class="text-gray-500 text-[10px]">${l.timestamp}</span>
-            </div>
-          `).join('');
+          const json = await res.json();
+          const r = json.report;
 
-          showToast("Campaign Dispatched!", `Delivered: ${json.successful_deliveries} / ${json.total_targets}`, "success");
+          logs.innerHTML = `
+            <div class="text-emerald-400 font-bold">✓ Campaign Complete: ${r.sent} Dispatched | ${r.failed} Failed | Rate: ${r.primary_inbox_rate}</div>
+            <div class="text-gray-400 mt-2">Telemetry Events:</div>
+          `;
+
+          r.telemetry.forEach(ev => {
+            const isOk = ev.status === 'SENT_PRIMARY_INBOX';
+            logs.innerHTML += `
+              <div class="flex items-center justify-between text-xs py-1 border-b border-gray-900">
+                <span class="text-gray-300">${ev.recipient}</span>
+                <span class="${isOk ? 'text-emerald-400' : 'text-rose-400'} font-bold">${ev.status}</span>
+              </div>
+            `;
+          });
+
+          document.getElementById('delivery-rate-badge').innerText = `${r.primary_inbox_rate} Primary Delivery`;
+          showToast("Outbound Complete ✓", `${r.sent} Emails Dispatched with 100% Google TLS Handshake!`, "success");
         } else {
-          showToast("Dispatch Error", json.detail || "Failed to dispatch", "error");
+          const err = await res.json();
+          logs.innerHTML += `<div class="text-rose-400 font-bold">❌ Error: ${err.detail || 'Dispatch failed'}</div>`;
+          showToast("Dispatch Failed", err.detail || "Check SMTP Credentials", "error");
         }
       } catch (err) {
-        showToast("Network Error", err.message, "error");
+        logs.innerHTML += `<div class="text-rose-400 font-bold">❌ Error: ${err.message}</div>`;
+        showToast("Error", err.message, "error");
       } finally {
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Dispatch 100% Primary Outbound Campaign</span>`;
       }
     }
 
-    // AI Auto-Config when user pastes 16-digit Google App Password
-    function handleAppPasswordInput(el) {
-      let raw = el.value;
-      // Strip all spaces and hyphens
-      let cleaned = raw.replace(/[\s\-]/g, '');
-      el.value = cleaned;
+    // Modal & Config Management
+    function openSmtpModal() { document.getElementById('smtp-modal').classList.remove('hidden'); }
+    function closeSmtpModal() { document.getElementById('smtp-modal').classList.add('hidden'); }
 
+    function handleAppPasswordInput(inputEl) {
+      let val = inputEl.value.replace(/\s+/g, '').trim();
       const statusEl = document.getElementById('ai-password-status');
-      if (cleaned.length === 16) {
+      
+      if (val.length === 16) {
+        inputEl.value = val;
         statusEl.classList.remove('hidden');
-        document.getElementById('cfg-smtp-host').value = 'smtp.gmail.com';
-        document.getElementById('cfg-smtp-port').value = '587';
-        showToast("16-Digit Key Detected ✓", "AI auto-configured Google Authenticated SMTP (587 TLS)", "success");
       } else {
         statusEl.classList.add('hidden');
       }
     }
 
-    // Modal Control Functions
-    function openSmtpModal() { document.getElementById('smtp-modal').classList.remove('hidden'); }
-    function closeSmtpModal() { document.getElementById('smtp-modal').classList.add('hidden'); }
     function saveSmtpConfig() {
       const name = document.getElementById('cfg-sender-name').value.trim();
       const email = document.getElementById('cfg-sender-email').value.trim();
@@ -1002,6 +1126,7 @@
       
       if (email) {
         document.getElementById('sender-preview').innerText = `Sender: ${email}`;
+        document.getElementById('nav-smtp-status').innerText = `Google SMTP: Connected (${email.split('@')[0]})`;
         localStorage.setItem('inboxshield_sender_name', name);
         localStorage.setItem('inboxshield_sender_email', email);
         localStorage.setItem('inboxshield_sender_pass', pass);
@@ -1019,6 +1144,7 @@
       if (email) {
         document.getElementById('cfg-sender-email').value = email;
         document.getElementById('sender-preview').innerText = `Sender: ${email}`;
+        document.getElementById('nav-smtp-status').innerText = `Google SMTP: Connected (${email.split('@')[0]})`;
         document.getElementById('test-email-target').value = email;
       }
       if (pass) {
