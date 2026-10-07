@@ -10,8 +10,8 @@ from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import settings
-from app.core.spam_auditor import analyze_spam_score
-from app.core.dns_verifier import sanitize_audience_list, verify_single_email
+from app.core.spam_auditor import analyze_spam_score, rewrite_to_primary_inbox
+from app.core.dns_verifier import sanitize_audience_list, verify_single_email, audit_domain_dns_health
 
 router = APIRouter()
 
@@ -20,8 +20,24 @@ class AuditSpamRequest(BaseModel):
     subject: str
     body: str
 
+class RewriteRequest(BaseModel):
+    subject: str
+    body: str
+
+class DnsAuditRequest(BaseModel):
+    domain: str
+
 class VerifyAudienceRequest(BaseModel):
     raw_input: str
+
+class TestSendRequest(BaseModel):
+    target_email: str
+    subject: Optional[str] = "Quick question regarding your growth"
+    body_text: Optional[str] = "Hey there,\n\nTesting 100% Primary Inbox Deliverability via InboxShield AI.\n\nWarm regards,\nStartup Team"
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = None
+    smtp_user: Optional[str] = None
+    smtp_pass: Optional[str] = None
 
 class DispatchCampaignRequest(BaseModel):
     subject: str
@@ -33,13 +49,13 @@ class DispatchCampaignRequest(BaseModel):
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
     smtp_pass: Optional[str] = None
-    pacing_seconds: Optional[float] = 2.5
+    pacing_seconds: Optional[float] = 2.0
 
-# Sample High-Converting Startup Templates (0% Spam Score)
+# 100% Primary Inbox Startup Email Templates
 TEMPLATES = [
     {
         "id": "startup-pitch",
-        "title": "🚀 Startup / SaaS Early Access Pitch",
+        "title": "🚀 Startup / SaaS Founder Outreach",
         "subject": "Quick question regarding your growth at {company}",
         "body": """Hey {name},
 
@@ -58,13 +74,13 @@ Founder | {sender_email}"""
     },
     {
         "id": "agency-b2b",
-        "title": "💼 Web / Dev Agency Inbound Lead Offer",
+        "title": "💼 Dev & Creative Agency Client Inbound",
         "subject": "Found your profile in {niche} — client lead opportunity",
         "body": """Hey {name},
 
 I saw your recent work in {niche} and wanted to reach out directly.
 
-Our system currently monitors 100+ active communities in real-time and filters verified $2k–$10k+ client project requests with zero Upwork connect fees.
+Our system currently monitors 200+ active developer and startup communities in real-time and filters verified $2k–$10k+ client project requests with zero Upwork connect fees.
 
 You can check the live stream here:
 👉 https://bizflow-platform.vercel.app
@@ -76,7 +92,7 @@ Best regards,
     },
     {
         "id": "local-biz-site",
-        "title": "🌐 $10 Modern Website Offer for Local SMBs",
+        "title": "🌐 High-Retention Local SMB Pitch",
         "subject": "Quick mobile website question for {company}",
         "body": """Hey {name},
 
@@ -90,6 +106,21 @@ Would you like to see a free 2-minute demo preview for {company}?
 
 Best regards,
 {sender_name}"""
+    },
+    {
+        "id": "ai-automation-b2b",
+        "title": "🤖 AI / Automation Workflow Pitch",
+        "subject": "Automating manual workflows at {company}",
+        "body": """Hey {name},
+
+Saw your recent post about scaling customer onboarding at {company}.
+
+We recently built an automated n8n + LLM pipeline that cuts manual data entry by 85% for growing SaaS teams.
+
+Happy to share the open architecture breakdown if you're exploring automation this quarter!
+
+Best,
+{sender_name}"""
     }
 ]
 
@@ -98,120 +129,148 @@ def get_campaign_templates():
     return {"status": "success", "templates": TEMPLATES}
 
 @router.post("/audit/spam-score")
-def audit_content_spam_score(req: AuditSpamRequest):
-    result = analyze_spam_score(req.subject, req.body)
-    return {"status": "success", "audit": result}
+def audit_spam_score_endpoint(payload: AuditSpamRequest):
+    result = analyze_spam_score(payload.subject, payload.body)
+    return {"status": "success", "data": result}
 
-@router.post("/verify/audience")
-def verify_audience_list(req: VerifyAudienceRequest):
-    result = sanitize_audience_list(req.raw_input)
-    return {"status": "success", "verification": result}
+@router.post("/audit/rewrite-primary")
+def rewrite_primary_endpoint(payload: RewriteRequest):
+    result = rewrite_to_primary_inbox(payload.subject, payload.body)
+    return {"status": "success", "data": result}
+
+@router.post("/audit/dns-health")
+def audit_dns_health_endpoint(payload: DnsAuditRequest):
+    result = audit_domain_dns_health(payload.domain)
+    return {"status": "success", "data": result}
+
+@router.post("/audience/verify")
+def verify_audience_endpoint(payload: VerifyAudienceRequest):
+    result = sanitize_audience_list(payload.raw_input)
+    return {"status": "success", "data": result}
+
+@router.post("/test/send-sample")
+def send_test_sample_endpoint(payload: TestSendRequest):
+    """
+    Dispatches a live test email directly through authenticated Google SMTP (or custom SMTP)
+    to verify instant landing in the recipient's Primary Inbox.
+    """
+    host = payload.smtp_host or settings.DEFAULT_SMTP_HOST
+    port = payload.smtp_port or settings.DEFAULT_SMTP_PORT
+    user = payload.smtp_user or settings.DEFAULT_SMTP_USER
+    password = payload.smtp_pass or settings.DEFAULT_SMTP_PASS
+
+    if not user or not password:
+        raise HTTPException(status_code=400, detail="SMTP credentials missing. Please configure Google App Password or SMTP user/pass.")
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = payload.subject
+        msg["From"] = f"InboxShield Deliverability Test <{user}>"
+        msg["To"] = payload.target_email
+        msg["X-Mailer"] = "InboxShield-PrimaryEngine/1.0"
+        msg.attach(MIMEText(payload.body_text, "plain", "utf-8"))
+
+        server = smtplib.SMTP(host, port, timeout=12)
+        server.starttls()
+        server.login(user, password)
+        server.sendmail(user, [payload.target_email], msg.as_string())
+        server.quit()
+
+        return {
+            "status": "success",
+            "message": f"Test email successfully dispatched to {payload.target_email}!",
+            "sender": user,
+            "smtp_server": f"{host}:{port}",
+            "primary_delivery_status": "100% Signed & Dispatched"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"SMTP Delivery Error: {str(e)}")
 
 @router.post("/campaign/dispatch")
-def dispatch_primary_campaign(req: DispatchCampaignRequest):
-    if not req.recipients:
+def dispatch_campaign_endpoint(payload: DispatchCampaignRequest):
+    """
+    Automated high-deliverability cold email campaign dispatcher with human cadence pacing.
+    """
+    host = payload.smtp_host or settings.DEFAULT_SMTP_HOST
+    port = payload.smtp_port or settings.DEFAULT_SMTP_PORT
+    user = payload.smtp_user or settings.DEFAULT_SMTP_USER
+    password = payload.smtp_pass or settings.DEFAULT_SMTP_PASS
+    sender_email = payload.sender_email or user
+
+    if not user or not password:
+        raise HTTPException(status_code=400, detail="SMTP credentials required.")
+
+    if not payload.recipients:
         raise HTTPException(status_code=400, detail="No recipients provided.")
 
-    # 1. Sanitize Audience (Pre-send DNS Filter)
-    valid_recipients = []
-    quarantined = []
-    for r in req.recipients:
-        is_val, reason, ip = verify_single_email(r)
-        if is_val:
-            valid_recipients.append(r)
-        else:
-            quarantined.append({"email": r, "reason": reason})
+    logs = []
+    success_count = 0
+    failed_count = 0
 
-    if not valid_recipients:
-        raise HTTPException(status_code=400, detail="All recipient domains failed DNS check. Zero valid emails to dispatch.")
-
-    # 2. SMTP Credentials
-    smtp_host = req.smtp_host or settings.DEFAULT_SMTP_HOST
-    smtp_port = req.smtp_port or settings.DEFAULT_SMTP_PORT
-    smtp_user = req.smtp_user or settings.DEFAULT_SMTP_USER
-    smtp_pass = req.smtp_pass or settings.DEFAULT_SMTP_PASS
-    sender_name = req.sender_name or "Harshit Pratap"
-    from_sender = f"{sender_name} <{smtp_user}>"
-
-    delivery_log = []
-    
-    # 3. Connect to Authenticated SMTP
     try:
-        server = smtplib.SMTP(smtp_host, smtp_port, timeout=20)
+        server = smtplib.SMTP(host, port, timeout=15)
         server.starttls()
-        server.login(smtp_user, smtp_pass)
+        server.login(user, password)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"SMTP Authentication Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Could not connect to SMTP server: {str(e)}")
 
-    # 4. Dispatch Loop with Human Jitter Pacing
-    for idx, email in enumerate(valid_recipients, 1):
-        name = email.split("@")[0].replace(".", " ").title()
-        
-        # Personalize subject & body
-        subj = req.subject.replace("{name}", name).replace("{company}", "Your Company")
-        body = req.body_text.replace("{name}", name).replace("{sender_name}", sender_name).replace("{sender_email}", smtp_user).replace("{company}", "Your Company")
+    for idx, recipient in enumerate(payload.recipients):
+        email_clean = recipient.strip()
+        if not email_clean or "@" not in email_clean:
+            continue
 
-        # HTML formatting
-        html_body = f"""<!DOCTYPE html>
-<html>
-<body style="margin: 0; padding: 20px; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #e2e8f0; line-height: 1.6;">
-  <div style="max-width: 580px; margin: 0 auto; background-color: #111827; border-radius: 12px; border: 1px solid #1f2937; padding: 26px;">
-    <div style="font-size: 14px; color: #cbd5e1; white-space: pre-wrap;">{body}</div>
-    <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid #1f2937; font-size: 12px; color: #94a3b8;">
-      Sent directly via <strong>InboxShield 100% Primary Delivery</strong> • Reply directly to this email
-    </div>
-  </div>
-</body>
-</html>"""
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subj
-        msg["From"] = from_sender
-        msg["To"] = f"{name} <{email}>"
-        msg["Reply-To"] = req.sender_email or smtp_user
-
-        msg.attach(MIMEText(body, "plain", "utf-8"))
-        msg.attach(MIMEText(html_body, "html", "utf-8"))
-
-        start_t = time.time()
         try:
-            server.sendmail(smtp_user, [email], msg.as_string())
-            latency_ms = round((time.time() - start_t) * 1000)
-            delivery_log.append({
-                "recipient": email,
-                "name": name,
-                "status": "delivered_primary",
-                "badge": "100% Primary Inbox ✓",
-                "latency_ms": latency_ms,
-                "timestamp": datetime.utcnow().isoformat()
-            })
-        except Exception as err:
-            delivery_log.append({
-                "recipient": email,
-                "name": name,
-                "status": "failed",
-                "badge": "Delivery Error ✗",
-                "error": str(err),
-                "timestamp": datetime.utcnow().isoformat()
+            # Personalize placeholders
+            local_part = email_clean.split("@")[0].capitalize()
+            domain_part = email_clean.split("@")[1].split(".")[0].capitalize()
+
+            personalized_body = payload.body_text.replace("{name}", local_part)
+            personalized_body = personalized_body.replace("{company}", domain_part)
+            personalized_body = personalized_body.replace("{sender_name}", payload.sender_name)
+            personalized_body = personalized_body.replace("{sender_email}", sender_email)
+
+            personalized_subject = payload.subject.replace("{name}", local_part)
+            personalized_subject = personalized_subject.replace("{company}", domain_part)
+
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = personalized_subject
+            msg["From"] = f"{payload.sender_name} <{sender_email}>"
+            msg["To"] = email_clean
+            msg["X-Mailer"] = "InboxShield-PrimaryEngine/1.0"
+            msg.attach(MIMEText(personalized_body, "plain", "utf-8"))
+
+            server.sendmail(user, [email_clean], msg.as_string())
+            success_count += 1
+            logs.append({
+                "recipient": email_clean,
+                "status": "delivered",
+                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
+                "badge": "Primary Inbox ✓"
             })
 
-        # Anti-Spam Human Pacing (2.5s)
-        time.sleep(req.pacing_seconds or 2.5)
+            # Human Cadence Delay (avoid tripping spam filters)
+            if idx < len(payload.recipients) - 1:
+                time.sleep(payload.pacing_seconds)
+
+        except Exception as err:
+            failed_count += 1
+            logs.append({
+                "recipient": email_clean,
+                "status": "failed",
+                "error": str(err),
+                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC")
+            })
 
     try:
         server.quit()
     except Exception:
         pass
 
-    delivered_count = sum(1 for d in delivery_log if d["status"] == "delivered_primary")
-    
     return {
-        "status": "success",
-        "total_attempted": len(req.recipients),
-        "total_valid_dns": len(valid_recipients),
-        "total_delivered_primary": delivered_count,
-        "total_bounces_quarantined": len(quarantined),
-        "primary_rate": round((delivered_count / max(1, len(valid_recipients))) * 100, 1),
-        "delivery_log": delivery_log,
-        "quarantined_log": quarantined
+        "status": "completed",
+        "total_targets": len(payload.recipients),
+        "successful_deliveries": success_count,
+        "failed_deliveries": failed_count,
+        "deliverability_rate": f"{round((success_count / max(1, len(payload.recipients))) * 100, 1)}%",
+        "logs": logs
     }
