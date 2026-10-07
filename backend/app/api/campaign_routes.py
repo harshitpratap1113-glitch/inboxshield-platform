@@ -43,7 +43,7 @@ class DispatchCampaignRequest(BaseModel):
     subject: str
     body_text: str
     recipients: List[str]
-    sender_name: Optional[str] = "Harshit Pratap"
+    sender_name: Optional[str] = "Startup Founder"
     sender_email: Optional[str] = None
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = None
