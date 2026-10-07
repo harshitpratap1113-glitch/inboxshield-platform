@@ -305,29 +305,36 @@
                 <i class="fa-brands fa-google"></i>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white">Why Google App Password Works 100%</h3>
-                <p class="text-xs text-gray-400">Direct Google SMTP routing bypasses cold email filters</p>
+                <h3 class="text-sm font-bold text-white">How to Get 100% Primary Inbox Delivery</h3>
+                <p class="text-xs text-gray-400">Direct Google SMTP routing bypasses cold outreach spam filters</p>
               </div>
             </div>
 
+            <!-- 1-CLICK DIRECT GOOGLE LINK BUTTON -->
+            <a href="https://myaccount.google.com/apppasswords" target="_blank" 
+              class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2">
+              <i class="fa-brands fa-google text-sm"></i>
+              <span>1-Click: Open Google App Passwords Generator ➔</span>
+            </a>
+
             <ol class="space-y-2.5 text-xs text-gray-300 font-medium">
               <li class="flex items-start gap-2">
-                <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700/60 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
-                <span>Go to <a href="https://myaccount.google.com/security" target="_blank" class="text-emerald-400 underline font-bold">Google Security</a> & enable 2-Step Verification.</span>
+                <span class="w-5 h-5 rounded-full bg-blue-950 text-blue-400 border border-blue-700/60 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                <span>Click the blue button above to open Google's official password generator.</span>
               </li>
               <li class="flex items-start gap-2">
-                <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700/60 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
-                <span>Generate a 16-digit <strong>App Password</strong> (Select 'Mail' / 'Other').</span>
+                <span class="w-5 h-5 rounded-full bg-blue-950 text-blue-400 border border-blue-700/60 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                <span>Enter App Name <strong>'InboxShield'</strong> & click <strong>Create</strong>.</span>
               </li>
               <li class="flex items-start gap-2">
                 <span class="w-5 h-5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700/60 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
-                <span>Connect below for instant 100% DKIM signed delivery!</span>
+                <span>Copy the 16-character yellow code and paste it below — AI auto-connects the rest!</span>
               </li>
             </ol>
 
             <button onclick="openSmtpModal()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-2">
               <i class="fa-solid fa-key text-xs"></i>
-              <span>Configure My SMTP Sender Credentials</span>
+              <span>Paste 16-Digit Code & Auto-Connect SMTP</span>
             </button>
           </div>
 
@@ -499,9 +506,24 @@
             class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-gray-100 focus:border-emerald-500 focus:outline-none font-medium" />
         </div>
         <div>
-          <label class="font-bold text-gray-300 block mb-1">Google 16-Digit App Password</label>
-          <input type="password" id="cfg-sender-pass" value="" placeholder="16 characters (e.g. abcd efgh ijkl mnop)" 
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-bold text-gray-300">Google 16-Digit App Password</label>
+            <a href="https://myaccount.google.com/apppasswords" target="_blank" class="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+              <span>Get 16-Digit Code ➔</span>
+            </a>
+          </div>
+
+          <a href="https://myaccount.google.com/apppasswords" target="_blank" class="w-full py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-xs font-bold transition flex items-center justify-center gap-2 mb-2">
+            <i class="fa-brands fa-google"></i>
+            <span>1-Click: Open Official Google App Passwords Page ➔</span>
+          </a>
+
+          <input type="password" id="cfg-sender-pass" oninput="handleAppPasswordInput(this)" value="" placeholder="16 characters (e.g. abcd efgh ijkl mnop)" 
             class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-2.5 text-gray-100 focus:border-emerald-500 focus:outline-none font-mono" />
+          <div id="ai-password-status" class="text-[11px] text-emerald-400 mt-1 hidden font-mono flex items-center gap-1">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>AI Auto-Detected: 16-Digit Google Key Cleaned & Configured ✓</span>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -952,14 +974,57 @@
       }
     }
 
+    // AI Auto-Config when user pastes 16-digit Google App Password
+    function handleAppPasswordInput(el) {
+      let raw = el.value;
+      // Strip all spaces and hyphens
+      let cleaned = raw.replace(/[\s\-]/g, '');
+      el.value = cleaned;
+
+      const statusEl = document.getElementById('ai-password-status');
+      if (cleaned.length === 16) {
+        statusEl.classList.remove('hidden');
+        document.getElementById('cfg-smtp-host').value = 'smtp.gmail.com';
+        document.getElementById('cfg-smtp-port').value = '587';
+        showToast("16-Digit Key Detected ✓", "AI auto-configured Google Authenticated SMTP (587 TLS)", "success");
+      } else {
+        statusEl.classList.add('hidden');
+      }
+    }
+
     // Modal Control Functions
     function openSmtpModal() { document.getElementById('smtp-modal').classList.remove('hidden'); }
     function closeSmtpModal() { document.getElementById('smtp-modal').classList.add('hidden'); }
     function saveSmtpConfig() {
-      const email = document.getElementById('cfg-sender-email').value;
-      document.getElementById('sender-preview').innerText = `Sender: ${email}`;
+      const name = document.getElementById('cfg-sender-name').value.trim();
+      const email = document.getElementById('cfg-sender-email').value.trim();
+      const pass = document.getElementById('cfg-sender-pass').value.trim();
+      
+      if (email) {
+        document.getElementById('sender-preview').innerText = `Sender: ${email}`;
+        localStorage.setItem('inboxshield_sender_name', name);
+        localStorage.setItem('inboxshield_sender_email', email);
+        localStorage.setItem('inboxshield_sender_pass', pass);
+      }
       closeSmtpModal();
-      showToast("SMTP Config Saved", `Authenticated as ${email}`, "success");
+      showToast("SMTP Config Saved", email ? `Authenticated as ${email}` : "Credentials updated", "success");
+    }
+
+    function loadSavedSmtpConfig() {
+      const name = localStorage.getItem('inboxshield_sender_name');
+      const email = localStorage.getItem('inboxshield_sender_email');
+      const pass = localStorage.getItem('inboxshield_sender_pass');
+
+      if (name) document.getElementById('cfg-sender-name').value = name;
+      if (email) {
+        document.getElementById('cfg-sender-email').value = email;
+        document.getElementById('sender-preview').innerText = `Sender: ${email}`;
+        document.getElementById('test-email-target').value = email;
+      }
+      if (pass) {
+        document.getElementById('cfg-sender-pass').value = pass;
+        handleAppPasswordInput(document.getElementById('cfg-sender-pass'));
+      }
     }
 
     function openTestSendModal() { document.getElementById('test-modal').classList.remove('hidden'); }
@@ -1001,6 +1066,7 @@
     // Init on page load
     window.addEventListener('DOMContentLoaded', () => {
       initTemplates();
+      loadSavedSmtpConfig();
     });
   </script>
 </body>
